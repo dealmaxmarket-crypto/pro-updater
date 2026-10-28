@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 import requests
+import datetime
 
 # Твої 9 посилань на прайси постачальників:
 SUPPLIER_URLS = [
@@ -19,7 +20,6 @@ def main():
 
     print("Починаємо збір даних з прайсів постачальників...")
 
-    # По черзі завантажуємо кожен прайс постачальника
     for url in SUPPLIER_URLS:
         if not url.startswith("http"):
             continue
@@ -47,6 +47,11 @@ def main():
 
     # Створюємо єдиний XML-фід для Prom.ua
     root = ET.Element("yml_catalog")
+    
+    # Додаємо коментар з поточним часом, щоб файл завжди гарантовано відрізнявся
+    comment = ET.Comment(f"Updated at: {datetime.datetime.now()}")
+    root.append(comment)
+
     shop = ET.SubElement(root, "shop")
     offers = ET.SubElement(shop, "offers")
 
@@ -55,7 +60,6 @@ def main():
         stock_el = ET.SubElement(offer_el, "stock_quantity")
         stock_el.text = str(data['quantity'])
 
-    # Зберігаємо у файл
     tree = ET.ElementTree(root)
     tree.write("prom_update_feed.xml", encoding="utf-8", xml_declaration=True)
     print(f"Готово! Загалом об'єднано унікальних товарів у фіді: {len(supplier_stock)}")
