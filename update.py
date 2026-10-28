@@ -24,7 +24,8 @@ def load_supplier_active_skus(urls):
         try:
             print(f"Завантажую прайс: {url[:40]}...")
             req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=30) as response:
+            # Зменшено таймаут до 10 секунд, щоб скрипт не зависав через мертві сервери
+            with urllib.request.urlopen(req, timeout=10) as response:
                 xml_data = response.read()
                 
             root = ET.fromstring(xml_data)
@@ -39,7 +40,7 @@ def load_supplier_active_skus(urls):
                         if code_elem is not None and code_elem.text:
                             active_skus.add(str(code_elem.text).strip())
         except Exception as e:
-            print(f"ПОМИЛКА при завантаженні {url[:40]}: {e}")
+            print(f"ПРОПУЩЕНО через помилку/таймаут {url[:40]}: {e}")
             
     print(f"Успішно зібрано активних артикулів від постачальників: {len(active_skus)}")
     return active_skus
