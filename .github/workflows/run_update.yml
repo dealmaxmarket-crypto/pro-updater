@@ -1,0 +1,27 @@
+name: Run Prom Update Feed
+
+on:
+  schedule:
+    # Запускается автоматически каждые 4 часа
+    - cron: '0 */4 * * *'
+  workflow_dispatch: 
+
+jobs:
+  update-feed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install pandas openpyxl
+
+      - name: Run script
+        run: |
+          python update.py
