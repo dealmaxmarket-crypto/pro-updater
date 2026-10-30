@@ -32,7 +32,8 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git reset --soft origin/main
           git add prom_update_feed.xml
           git commit -m "Автоматическое обновление файла prom_update_feed.xml" || exit 0
-          git pull --rebase origin main
-          git push
+          git push origin main --force
