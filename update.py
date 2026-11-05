@@ -13,6 +13,8 @@ SUPPLIER_URLS = [
     "https://opt-drop.com/storage/xml/opt-drop-29.xml",
     "https://velocompany.com.ua/products_feed.xml?hash_tag=dd9d6354c41b68d6d3d059d15f2dac4d&sales_notes=&product_ids=&label_ids=&exclude_fields=&html_description=0&yandex_cpa=&process_presence_sure=&languages=uk%2Cru&extra_fields=keywords&group_ids=",
     "https://geo-market.salesdrive.me/export/yml/export.yml?publicKey=g7HidIKJWTjhyiMvbsUQKuztsuqHTR2-gLac21sdTbwAVGX81FQSJ0FnelqaQAni"
+    "https://stozhary.net.ua/api/drop/margin-wholesale/DjCE0C_JNLrJiEM8SS1z31cFuc095jr9?price_min=465&incr=2",
+    "https://export.buymeua.shop/export-config?config_id=2422"
 ]
 
 def main():
