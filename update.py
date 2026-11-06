@@ -30,26 +30,45 @@ def main():
             if resp.status_code == 200:
                 root = ET.fromstring(resp.content)
                 count = 0
-                for offer in root.iter('offer'):
-                    # Гнучкий пошук ID товару
-                    offer_id = offer.attrib.get('id') or offer.attrib.get('code') or offer.attrib.get('vendorCode')
-                    if not offer_id:
-                        id_node = offer.find('id') or offer.find('code') or offer.find('vendorCode')
-                        if id_node is not None and id_node.text:
-                            offer_id = id_node.text.strip()
-                    
+                
+                # Визначаємо, чи це прайс Стожарів (бо там структура з <item>)
+                is_stozhary = "stozhary.net.ua" in url
+                iter_tag = 'item' if is_stozhary else 'offer'
+
+                for element in root.iter(iter_tag):
+                    offer_id = None
+
+                    # Для Стожарів пріоритетно шукаємо <vendorCode> або атрибут id
+                    if is_stozhary:
+                        vc_node = element.find('vendorCode')
+                        if vc_node is not None and vc_node.text:
+                            offer_id = vc_node.text.strip()
+                        if not offer_id:
+                            offer_id = element.attrib.get('id')
+                    else:
+                        # Стандартний гнучкий пошук для інших постачальників
+                        offer_id = element.attrib.get('id') or element.attrib.get('code') or element.attrib.get('vendorCode')
+                        if not offer_id:
+                            id_node = element.find('id') or element.find('code') or element.find('vendorCode')
+                            if id_node is not None and id_node.text:
+                                offer_id = id_node.text.strip()
+
                     if not offer_id:
                         continue
 
+                    # Ціна товару
+                    price_node = element.find('price')
+                    price_val = price_node.text.strip() if price_node is not None and price_node.text else '0'
+
                     # Гнучкий пошук наявності (available / доступный)
-                    available = offer.attrib.get('available') or offer.attrib.get('доступный')
+                    available = element.attrib.get('available') or element.attrib.get('доступный')
                     if not available:
-                        avail_node = offer.find('available') or offer.find('доступный')
+                        avail_node = element.find('available') or element.find('доступный')
                         if avail_node is not None and avail_node.text:
                             available = avail_node.text.strip()
                         else:
                             available = 'true'
-                    
+
                     # Нормалізуємо значення наявності в 'true' / 'false'
                     avail_str = str(available).lower()
                     if avail_str in ['1', 'true', '+', 'yes', 'так']:
@@ -57,11 +76,16 @@ def main():
                     else:
                         available_val = 'false'
 
-                    # Гнучкий пошук кількості на складі
-                    qty_node = offer.find('stock_quantity') or offer.find('quantity') or offer.find('stock')
+                    # Гнучкий пошук кількості на складі (для Стожарів це quantity_in_stock, для інших — інші теги)
+                    if is_stozhary:
+                        qty_node = element.find('quantity_in_stock') or element.find('stock_quantity') or element.find('quantity') or element.find('stock')
+                    else:
+                        qty_node = element.find('stock_quantity') or element.find('quantity') or element.find('stock')
+                        
                     stock_qty = qty_node.text.strip() if qty_node is not None and qty_node.text else '0'
 
                     supplier_stock[str(offer_id)] = {
+                        'price': price_val,
                         'available': available_val,
                         'quantity': stock_qty
                     }
@@ -76,7 +100,7 @@ def main():
     # Створюємо єдиний XML-фід для Prom.ua
     root = ET.Element("yml_catalog")
     
-    # Додаємо коментар з поточним часом, щоб файл завжди гарантовано відрізнявся
+    # Додаємо коментар з поточним часом
     comment = ET.Comment(f"Updated at: {datetime.datetime.now()}")
     root.append(comment)
 
@@ -85,12 +109,16 @@ def main():
 
     for item_id, data in supplier_stock.items():
         offer_el = ET.SubElement(offers, "offer", id=item_id, available=data['available'])
+        
+        price_el = ET.SubElement(offer_el, "price")
+        price_el.text = str(data['price'])
+
         stock_el = ET.SubElement(offer_el, "stock_quantity")
         stock_el.text = str(data['quantity'])
 
     tree = ET.ElementTree(root)
     tree.write("prom_update_feed.xml", encoding="utf-8", xml_declaration=True)
-    print(f"Готово! Загалом об'єднано унікальних товарів у фіді: {len(supplier_stock)}")
+    print(f"\nГотово! Загалом об'єднано унікальних товарів у єдиному фіді: {len(supplier_stock)}")
 
 if __name__ == "__main__":
     main()
