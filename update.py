@@ -31,22 +31,25 @@ def main():
                 root = ET.fromstring(resp.content)
                 count = 0
                 
-                # Визначаємо, чи це прайс Стожарів (бо там структура з <item>)
+                # Визначаємо особливості прайсу
                 is_stozhary = "stozhary.net.ua" in url
+                is_optdrop = "opt-drop.com" in url
                 iter_tag = 'item' if is_stozhary else 'offer'
 
                 for element in root.iter(iter_tag):
                     offer_id = None
 
-                    # Для Стожарів пріоритетно шукаємо <vendorCode> або атрибут id
-                    if is_stozhary:
+                    # Визначаємо артикул товару залежно від постачальника
+                    if is_stozhary or is_optdrop:
+                        # Стожари та Opt-drop: спочатку беремо vendorCode
                         vc_node = element.find('vendorCode')
                         if vc_node is not None and vc_node.text:
                             offer_id = vc_node.text.strip()
+                        # Якщо vendorCode відсутній — використовуємо ID
                         if not offer_id:
                             offer_id = element.attrib.get('id')
                     else:
-                        # Стандартний гнучкий пошук для інших постачальників
+                        # Інші постачальники — стандартний гнучкий пошук
                         offer_id = element.attrib.get('id') or element.attrib.get('code') or element.attrib.get('vendorCode')
                         if not offer_id:
                             id_node = element.find('id') or element.find('code') or element.find('vendorCode')
@@ -76,7 +79,7 @@ def main():
                     else:
                         available_val = 'false'
 
-                    # Гнучкий пошук кількості на складі (для Стожарів це quantity_in_stock, для інших — інші теги)
+                    # Гнучкий пошук кількості на складі
                     if is_stozhary:
                         qty_node = element.find('quantity_in_stock') or element.find('stock_quantity') or element.find('quantity') or element.find('stock')
                     else:
