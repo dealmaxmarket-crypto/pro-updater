@@ -2,8 +2,13 @@ import xml.etree.ElementTree as ET
 import requests
 import datetime
 
-# Усі 11 посилань на прайси постачальників:
+# Усі посилання на прайси постачальників (нові додано на початок):
 SUPPLIER_URLS = [
+    "https://api.dropshipping.ua/api/feeds/5491.xml",
+    "https://api.dropshipping.ua/api/feeds/5490.xml",
+    "https://api.dropshipping.ua/api/feeds/5489.xml",
+    "https://api.dropshipping.ua/api/feeds/5488.xml",
+    "https://api.dropshipping.ua/api/feeds/5487.xml",
     "https://aveon.net.ua/yandex_market.xml?hash_tag=7b71fadcc4a12f03cf26a304da032fba&sales_notes=&product_ids=&label_ids=&exclude_fields=&html_description=0&yandex_cpa=&process_presence_sure=&export_lang=ru&group_ids=",
     "https://i-maxi.com.ua/yandex_market.xml?hash_tag=3862084c32af01bfd3be5efc7110b84c&sales_notes=&product_ids=&label_ids=&exclude_fields=&html_description=1&yandex_cpa=&process_presence_sure=&languages=ru&group_ids=",
     "https://livelyshop.com.ua/products_feed.xml?hash_tag=e0e046a4f54904aacd559e46afd96a8e&sales_notes=&product_ids=&label_ids=&exclude_fields=&html_description=0&yandex_cpa=&process_presence_sure=&languages=uk%2Cru&group_ids=",
@@ -49,7 +54,7 @@ def main():
                         if not offer_id:
                             offer_id = element.attrib.get('id')
                     else:
-                        # Інші постачальники — стандартний гнучкий пошук
+                        # Інші постачальники (включно з новими з dropshipping.ua) — стандартний гнучкий пошук
                         offer_id = element.attrib.get('id') or element.attrib.get('code') or element.attrib.get('vendorCode')
                         if not offer_id:
                             id_node = element.find('id') or element.find('code') or element.find('vendorCode')
